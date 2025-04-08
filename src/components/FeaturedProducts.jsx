@@ -8,7 +8,7 @@ import ProductCard from './ProductCard';
 
 const FEATURED_PRODUCTS_QUERY = gql`
     query GetFeaturedProducts($first: Int!) {
-        products(first: $first) {
+        products(first: $first,query:"tag:featured") {
             edges {
                 node {
                     id
@@ -114,7 +114,7 @@ export default function FeaturedProducts() {
                 </motion.div>
 
                 {/* Product grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 relative justify-between">
                     {products.map((product, index) => (
                         <motion.div
                             key={product.id}
