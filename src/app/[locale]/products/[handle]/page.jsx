@@ -34,7 +34,7 @@ const PRODUCT_QUERY = gql`
   }
 `;
 
-export default async function ProductPage({ params }: { params: { handle: string } }) {
+export default async function ProductPage({ params}) {
     const { data } = await shopifyClient.query({
         query: PRODUCT_QUERY,
         variables: { handle: params.handle }
