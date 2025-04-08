@@ -1,0 +1,67 @@
+@tailwind base;
+@import "../../../node_modules/tailwindcss";
+@import "../../styles/tailwind-dark.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* global.css */
+@layer base {
+  html {
+    @apply bg-white text-gray-900 transition-colors duration-200;
+  }
+
+  /* Dark Mode styles for html and body */
+  html.dark {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  body {
+    @apply bg-white text-gray-900 transition-colors duration-200;
+  }
+
+  /* Apply dark styles to body when dark class is on html */
+  html.dark body {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-gray-900;
+  }
+
+  /* Dark Mode for headers */
+  html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6 {
+    @apply text-gray-100;
+  }
+
+  /* Other text elements */
+  p, a, li {
+    @apply text-gray-900;
+  }
+
+  html.dark header{
+    @apply bg-black;
+  }
+
+  /* Dark Mode for other text elements */
+  html.dark p, html.dark a, html.dark li {
+    @apply text-gray-100;
+  }
+}
+
+/* Custom scrollbar for dark mode */
+/*.dark ::-webkit-scrollbar {*/
+/*  width: 8px;*/
+/*}*/
+
+/*.dark ::-webkit-scrollbar-track {*/
+/*  @apply bg-gray-900;*/
+/*}*/
+
+/*.dark ::-webkit-scrollbar-thumb {*/
+/*  @apply bg-gray-800 rounded-full;*/
+/*}*/
+
+/*.dark ::-webkit-scrollbar-thumb:hover {*/
+/*  @apply bg-gray-600;*/
+/*}*/
