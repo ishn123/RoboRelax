@@ -1,6 +1,7 @@
-import {redirect} from 'next/navigation';
+import {ReactNode} from 'react';
 
-// This page only renders when the app is built statically (output: 'export')
-export default function RootPage() {
-    redirect('/en');
+// Since we have a `not-found.tsx` page on the root, a layout file
+// is required, even if it's just passing children through.
+export default function RootLayout({children}) {
+    return children;
 }
