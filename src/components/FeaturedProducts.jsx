@@ -66,7 +66,14 @@ export default function FeaturedProducts() {
         };
 
         fetchProducts();
+
     }, []);
+
+    useEffect(() => {
+        if(products && products.length> 0) {
+            console.log(products)
+        }
+    }, [products]);
 
     if (loading) {
         return (

@@ -3,6 +3,7 @@ import "./globals.css";
 import {ThemeProvider} from "@/context/themeContext";
 import Navbar from "@/components/NavBar";
 import {NextIntlClientProvider} from "next-intl";
+import {AuthProvider} from "@/context/authcontext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,10 +27,12 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
       <NextIntlClientProvider>
-          <ThemeProvider attribute="class">
-              <Navbar/>
-              {children}
-          </ThemeProvider>
+          <AuthProvider>
+              <ThemeProvider attribute="class">
+                  <Navbar/>
+                  {children}
+              </ThemeProvider>
+          </AuthProvider>
       </NextIntlClientProvider>
 
       </body>

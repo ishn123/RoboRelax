@@ -6,6 +6,19 @@ const httpLink = createHttpLink({
     uri: `https://${process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN}/api/${process.env.NEXT_PUBLIC_SHOPIFY_API_VERSION}/graphql.json`,
 });
 
+const adminHttpLink = createHttpLink({
+    uri:`https://${process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN}/admin/api/2025-01/graphql.json`
+})
+
+const adminAuthLink = setContext((_, { headers }) => ({
+    headers: {
+        ...headers,
+        'X-Shopify-Storefront-Access-Token': process.env.ADMIN_SHOPIFY_ACCESS_TOKEN,
+        'Content-Type': 'application/json',
+    }
+}));
+
+
 const authLink = setContext((_, { headers }) => ({
     headers: {
         ...headers,
@@ -18,3 +31,8 @@ export const shopifyClient = new ApolloClient({
     cache: new InMemoryCache(),
 });
 
+
+export const shopifyAdminClient = new ApolloClient({
+    link: adminHttpLink.concat(adminAuthLink),
+    cache: new InMemoryCache(),
+})
