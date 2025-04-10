@@ -144,7 +144,7 @@ export function AuthProvider({ children }) {
                                                 <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                                     <FiCheck className="text-green-400 text-2xl" />
                                                 </div>
-                                                <p className="text-gray-300">You're all set!</p>
+                                                <p className="text-gray-300">You re all set!</p>
                                             </motion.div>
                                         ) : authStatus === 'loading' ? (
                                             <motion.div
