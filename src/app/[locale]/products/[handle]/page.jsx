@@ -20,6 +20,39 @@ export default function ProductPage() {
     const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
     const addToCart = null;
 
+    const getNextDates = (count = 4)=>{
+        const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+        const fullDays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+        const res = [],d = new Date();
+
+        while(res.length < count){
+            d.setDate(d.getDate() + 1);
+            if(d.getDay() === 0)continue;
+            res.push({
+                date:`${days[d.getDay()]}. ${d.getDate()}`,
+                day:fullDays[d.getDay()],
+                fullDate:d.toISOString().split("T")[0]
+            });
+        }
+
+        return res;
+
+    }
+
+    const onCreateInvitation = ()=>{
+
+        const p1 = "Hey your booking for the product" + product.title;
+        const p2 = product.selectedVariant?product.selectedVariant.node.title:""
+        const p3 = "has been scheduled for the date " + selectedDate.fullDate + " at the time" + selectedTimeSlot
+
+        return p1 + " " + p2 + " " +  p3;
+    }
+
+    const changeVariant = (variant) => {
+        setSelectedVariant(variant);
+        setProduct()
+
+    }
 
     // Mock product data - replace with your actual data fetching
     useEffect(() => {
@@ -35,6 +68,19 @@ export default function ProductPage() {
                               url
                           }
                           tags
+                          variants(first:2){
+                              
+                              edges{
+                                  node{
+                                      id
+                                      title
+                                      price{
+                                          amount
+                                      }
+                                      
+                                  }
+                              }
+                          }
                       }
                     }
             `;
@@ -48,6 +94,12 @@ export default function ProductPage() {
                 variables: variables
             });
 
+            console.log(data);
+
+            const variants = data.product.variants.edges;
+
+
+
             // API call
             const {id,title,description,featuredImage,tags,price} = data.product;
             setProduct({
@@ -55,14 +107,11 @@ export default function ProductPage() {
                 title,
                 description,
                 tags,
-                price:30,
+                price:variants.length > 0? Number(variants[0].node.price.amount) : 30,
                 image: featuredImage.url,
-                availableDates: [
-                    { date: 'Thu. 15', day: 'Thursday', fullDate: '2023-06-15' },
-                    { date: 'Fri. 16', day: 'Friday', fullDate: '2023-06-16' },
-                    { date: 'Sat. 17', day: 'Saturday', fullDate: '2023-06-17' },
-                    { date: 'Mon. 19', day: 'Monday', fullDate: '2023-06-19' },
-                ]
+                variants:variants,
+                selectedVariant:variants.length>1?variants[0]:null,
+                availableDates: getNextDates()
             });
             if(Array.from(tags).includes("featured")){
                 setIsFeatured(true);
@@ -160,10 +209,44 @@ export default function ProductPage() {
                             {product.description}
                         </p>
 
+                        {/* Available Variants*/}
+                        {product.variants.length > 1 && (
+                            <div className="mb-8">
+                                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                                    Available Variants:
+                                </h4>
+                                <div className="flex flex-wrap gap-2.5">
+                                    <div className="flex flex-wrap gap-3">
+                                        {product.variants.map((variant,index) => (
+                                            <motion.button
+                                                key={index}
+                                                whileHover={{scale: 1.05}}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => {
+                                                    setProduct({
+                                                        ...product,
+                                                        selectedVariant:variant,
+                                                        price:Number(variant.node.price.amount)
+                                                    });
+                                                }}
+                                                className={`px-4 py-2 rounded-lg ${
+                                                    variant.node.id === product.selectedVariant.node.id
+                                                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
+                                                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-pink-400 dark:hover:border-pink-400'
+                                                } transition-all`}
+                                            >
+                                                {variant.node.title}
+                                            </motion.button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Appointment Booking */}
                         <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
                             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                                <FiCalendar className="text-pink-500" />
+                                <FiCalendar className="text-pink-500"/>
                                 <span>Book Your Consultation</span>
                             </h3>
 
@@ -176,7 +259,7 @@ export default function ProductPage() {
                                     {product.availableDates.map((date) => (
                                         <motion.button
                                             key={date.date}
-                                            whileHover={{ scale: 1.05 }}
+                                            whileHover={{scale: 1.05}}
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => {
                                                 setSelectedDate(date);
@@ -330,7 +413,7 @@ export default function ProductPage() {
                     </motion.div>
                 </div>
             </div>
-                {appointmentModalOpen && <AppointmentForm onClose={setAppointmentModalOpen}/>}
+                {appointmentModalOpen && <AppointmentForm onClose={setAppointmentModalOpen} product={product} onCreateInvitation={onCreateInvitation} date={selectedDate} timeSlot={selectedTimeSlot}/>}
 
 
         </div>

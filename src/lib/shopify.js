@@ -1,4 +1,4 @@
-import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+import {ApolloClient, InMemoryCache, createHttpLink, gql} from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 
 
@@ -36,3 +36,35 @@ export const shopifyAdminClient = new ApolloClient({
     link: adminHttpLink.concat(adminAuthLink),
     cache: new InMemoryCache(),
 })
+
+export const CREATE_CHECKOUT = gql`
+  mutation checkoutCreate($input: CheckoutCreateInput!) {
+    checkoutCreate(input: $input) {
+      checkout {
+        id
+        webUrl
+      }
+      checkoutUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+export const CHECKOUT_LINE_ITEMS_ADD = gql`
+  mutation checkoutLineItemsAdd($checkoutId: ID!, $lineItems: [CheckoutLineItemInput!]!) {
+    checkoutLineItemsAdd(checkoutId: $checkoutId, lineItems: $lineItems) {
+      checkout {
+        id
+        webUrl
+      }
+      checkoutUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
