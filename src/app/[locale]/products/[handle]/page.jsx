@@ -8,6 +8,7 @@ import {useParams} from "next/navigation";
 import {shopifyClient} from "@/lib/shopify";
 import {gql} from "@apollo/client";
 import AppointmentForm from "@/components/AppointmentForm";
+import {useCart} from "@/context/cartcontext";
 
 export default function ProductPage() {
     const [product, setProduct] = useState(null);
@@ -18,7 +19,7 @@ export default function ProductPage() {
     const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
     const [isFeatured, setIsFeatured] = useState(false);
     const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
-    const addToCart = null;
+    const {addToCart} = useCart();
 
     const getNextDates = (count = 4)=>{
         const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
@@ -145,17 +146,18 @@ export default function ProductPage() {
         return slots;
     };
 
-    const handleAddToCart = () => {
-        addToCart({
-            id: product.id,
-            title: product.title,
-            price: product.price,
-            quantity,
-            image: product.image,
-            appointment: selectedDate && selectedTimeSlot
-                ? { date: selectedDate.fullDate, time: selectedTimeSlot }
-                : null
-        });
+    const handleAddToCart = async (e) => {
+
+        e.preventDefault();
+
+
+        if(product.selectedVariant){
+            const variantId = product.selectedVariant.node.id;
+            await addToCart(variantId,quantity);
+
+        }else{
+            await addToCart(product.variants[0].node.id,quantity);
+        }
     };
 
     return (
@@ -245,87 +247,94 @@ export default function ProductPage() {
 
                         {/* Appointment Booking */}
                         <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                                <FiCalendar className="text-pink-500"/>
-                                <span>Book Your Consultation</span>
-                            </h3>
+                            {product.tags.includes("featured") && (
 
-                            {/* Available Dates */}
-                            <div className="mb-8">
-                                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
-                                    AVAILABLE DATES
-                                </h4>
-                                <div className="flex flex-wrap gap-3">
-                                    {product.availableDates.map((date) => (
-                                        <motion.button
-                                            key={date.date}
-                                            whileHover={{scale: 1.05}}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => {
-                                                setSelectedDate(date);
-                                                setShowCalendar(true);
-                                                setSelectedTimeSlot(null);
-                                            }}
-                                            className={`px-4 py-2 rounded-lg ${
-                                                selectedDate?.date === date.date
-                                                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
-                                                    : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-pink-400 dark:hover:border-pink-400'
-                                            } transition-all`}
-                                        >
-                                            {date.date}
-                                        </motion.button>
-                                    ))}
-                                </div>
-                            </div>
+                                <>
+                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                                        <FiCalendar className="text-pink-500"/>
+                                        <span>Book Your Consultation</span>
+                                    </h3>
 
-                            {/* Calendar Modal */}
-                            <AnimatePresence>
-                                {showCalendar && selectedDate && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 20 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 mb-8"
-                                    >
-                                        <div className="flex justify-between items-center mb-6">
-                                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                                {selectedDate.day}, {selectedDate.date}
-                                            </h4>
-                                            <button
-                                                onClick={() => setShowCalendar(false)}
-                                                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    {/* Available Dates */}
+                                    <div className="mb-8">
+                                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                                            AVAILABLE DATES
+                                        </h4>
+                                        <div className="flex flex-wrap gap-3">
+                                            {product.availableDates.map((date) => (
+                                                <motion.button
+                                                    key={date.date}
+                                                    whileHover={{scale: 1.05}}
+                                                    whileTap={{scale: 0.95}}
+                                                    onClick={() => {
+                                                        setSelectedDate(date);
+                                                        setShowCalendar(true);
+                                                        setSelectedTimeSlot(null);
+                                                    }}
+                                                    className={`px-4 py-2 rounded-lg ${
+                                                        selectedDate?.date === date.date
+                                                            ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
+                                                            : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-pink-400 dark:hover:border-pink-400'
+                                                    } transition-all`}
+                                                >
+                                                    {date.date}
+                                                </motion.button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Calendar Modal */}
+                                    <AnimatePresence>
+                                        {showCalendar && selectedDate && (
+                                            <motion.div
+                                                initial={{opacity: 0, y: 20}}
+                                                animate={{opacity: 1, y: 0}}
+                                                exit={{opacity: 0, y: 20}}
+                                                transition={{duration: 0.2}}
+                                                className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 mb-8"
                                             >
-                                                <FiX className="text-gray-500 dark:text-gray-400" />
-                                            </button>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                                                <FiClock className="text-pink-500" />
-                                                AVAILABLE TIME SLOTS
-                                            </h5>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                                {generateTimeSlots().map((slot) => (
-                                                    <motion.button
-                                                        key={slot}
-                                                        whileHover={{ scale: 1.03 }}
-                                                        whileTap={{ scale: 0.97 }}
-                                                        onClick={() => setSelectedTimeSlot(slot)}
-                                                        className={`p-3 rounded-lg text-center ${
-                                                            selectedTimeSlot === slot
-                                                                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
-                                                                : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                                        } transition-colors`}
+                                                <div className="flex justify-between items-center mb-6">
+                                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                                        {selectedDate.day}, {selectedDate.date}
+                                                    </h4>
+                                                    <button
+                                                        onClick={() => setShowCalendar(false)}
+                                                        className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
                                                     >
-                                                        {slot}
-                                                    </motion.button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                                                        <FiX className="text-gray-500 dark:text-gray-400"/>
+                                                    </button>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                                                        <FiClock className="text-pink-500"/>
+                                                        AVAILABLE TIME SLOTS
+                                                    </h5>
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                        {generateTimeSlots().map((slot) => (
+                                                            <motion.button
+                                                                key={slot}
+                                                                whileHover={{scale: 1.03}}
+                                                                whileTap={{scale: 0.97}}
+                                                                onClick={() => setSelectedTimeSlot(slot)}
+                                                                className={`p-3 rounded-lg text-center ${
+                                                                    selectedTimeSlot === slot
+                                                                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
+                                                                        : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                                                } transition-colors`}
+                                                            >
+                                                                {slot}
+                                                            </motion.button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </>
+
+                            )}
+
 
                             {/* Quantity Selector */}
                             <div className="mb-8">
@@ -334,29 +343,30 @@ export default function ProductPage() {
                                 </h4>
                                 <div className="flex items-center gap-4">
                                     <motion.button
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
+                                        whileHover={{scale: 1.1}}
+                                        whileTap={{scale: 0.9}}
                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
                                         className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                                     >
-                                        <FiMinus className="text-gray-700 dark:text-gray-300" />
+                                        <FiMinus className="text-gray-700 dark:text-gray-300"/>
                                     </motion.button>
                                     <span className="text-xl font-medium w-8 text-center">
                     {quantity}
                   </span>
                                     <motion.button
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
+                                        whileHover={{scale: 1.1}}
+                                        whileTap={{scale: 0.9}}
                                         onClick={() => setQuantity(quantity + 1)}
                                         className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                                     >
-                                        <FiPlus className="text-gray-700 dark:text-gray-300" />
+                                        <FiPlus className="text-gray-700 dark:text-gray-300"/>
                                     </motion.button>
                                 </div>
                             </div>
 
                             {/* Price Summary */}
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
+                            <div
+                                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-gray-600 dark:text-gray-400">Price per unit</span>
                                     <span className="font-medium">€{product.price.toFixed(2)}</span>
@@ -373,9 +383,11 @@ export default function ProductPage() {
                     </span>
                                     </div>
                                 )}
-                                <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4 flex justify-between items-center">
+                                <div
+                                    className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-4 flex justify-between items-center">
                                     <span className="text-lg font-semibold">Total</span>
-                                    <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
+                                    <span
+                                        className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
                     €{(product.price * quantity).toFixed(2)}
                   </span>
                                 </div>
@@ -383,28 +395,28 @@ export default function ProductPage() {
 
                             {/* Add to Cart Button */}
                             {
-                                isFeatured?(
+                                isFeatured ? (
                                         <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={()=>setAppointmentModalOpen(true)}
+                                            whileHover={{scale: 1.02}}
+                                            whileTap={{scale: 0.98}}
+                                            onClick={() => setAppointmentModalOpen(true)}
                                             className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold shadow-lg hover:shadow-pink-500/30 transition-all flex items-center justify-center gap-3"
                                         >
                                             <span>Book Appointment</span>
                                         </motion.button>
-                                ):
+                                    ) :
 
                                     (
 
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={handleAddToCart}
-                                        className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold shadow-lg hover:shadow-pink-500/30 transition-all flex items-center justify-center gap-3"
-                                    >
-                                        <FiShoppingCart className="text-xl" />
-                                        <span>Add to Cart</span>
-                                    </motion.button>
+                                        <motion.button
+                                            whileHover={{scale: 1.02}}
+                                            whileTap={{scale: 0.98}}
+                                            onClick={handleAddToCart}
+                                            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold shadow-lg hover:shadow-pink-500/30 transition-all flex items-center justify-center gap-3"
+                                        >
+                                            <FiShoppingCart className="text-xl"/>
+                                            <span>Add to Cart</span>
+                                        </motion.button>
 
                                     )
                             }
@@ -413,7 +425,7 @@ export default function ProductPage() {
                     </motion.div>
                 </div>
             </div>
-                {appointmentModalOpen && <AppointmentForm onClose={setAppointmentModalOpen} product={product} onCreateInvitation={onCreateInvitation} date={selectedDate} timeSlot={selectedTimeSlot}/>}
+                {appointmentModalOpen && <AppointmentForm onClose={setAppointmentModalOpen} product={product} onCreateInvitation={onCreateInvitation} date={selectedDate} timeSlot={selectedTimeSlot} handleAddToCart={handleAddToCart}/>}
 
 
         </div>

@@ -6,7 +6,7 @@ import { FiCalendar, FiClock, FiUser, FiMail,FiX } from 'react-icons/fi';
 import {useAuth} from "@/context/authcontext";
 import {useRouter} from "next/navigation";
 
-export default function AppointmentForm({ product, onCreateInvitation,onClose,date,timeSlot}) {
+export default function AppointmentForm({ product, onCreateInvitation,onClose,date,timeSlot,handleAddToCart}) {
     const {user} = useAuth();
     const router = useRouter();
     const [formData, setFormData] = useState({
@@ -43,18 +43,23 @@ export default function AppointmentForm({ product, onCreateInvitation,onClose,da
         const message = onCreateInvitation();
         console.log(message)
         localStorage.setItem(formData.email, JSON.stringify(message));
-        //router.push(`/checkout?cid=${product.selectedVariant.node.id.split('/').pop()}`)
-        await fetch("/api/triggerEmail",{
-            method: "POST",
-            headers:{
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({userEmail:formData.email, message:message}),
-        }).then(()=>{
-            onClose();
-        }).catch(()=>{
-            console.log("Issue sending mail")
-        })
+
+        await handleAddToCart(e);
+
+        onClose();
+        router.push(`/checkout`)
+
+        // await fetch("/api/triggerEmail",{
+        //     method: "POST",
+        //     headers:{
+        //         "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({userEmail:formData.email, message:message}),
+        // }).then(()=>{
+        //
+        // }).catch(()=>{
+        //     console.log("Issue sending mail")
+        // })
     };
 
     return (

@@ -4,13 +4,10 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FiShoppingCart, FiHeart } from 'react-icons/fi';
-import {useRouter} from "next/navigation";
 
-export default function ProductCard({product}) {
-
-
-    const pId = product.id.split("/").splice(-1)[0]
-    console.log(pId);
+export default function ProductCard({ product }) {
+    const pId = product.id.split("/").splice(-1)[0];
+    const isInStock = product.variants?.edges?.[0]?.node?.availableForSale;
 
     return (
         <motion.div
@@ -26,6 +23,11 @@ export default function ProductCard({product}) {
                         className="object-cover"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     />
+                    {!isInStock && (
+                        <div className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                            Out of Stock
+                        </div>
+                    )}
                     <button className="absolute top-4 right-4 p-2 bg-white/80 dark:bg-gray-900/80 rounded-full hover:bg-pink-500 hover:text-white transition-colors">
                         <FiHeart className="w-5 h-5" />
                     </button>
@@ -48,7 +50,11 @@ export default function ProductCard({product}) {
           </span>
                     <motion.button
                         whileTap={{ scale: 0.9 }}
-                        className="p-2 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition-colors"
+                        className={`p-2 rounded-full transition-colors ${
+                            isInStock ? 'bg-pink-500 text-white hover:bg-pink-600' : 'bg-gray-400 text-white cursor-not-allowed'
+                        }`}
+                        disabled={!isInStock}
+                        title={isInStock ? 'Add to cart' : 'Out of stock'}
                     >
                         <FiShoppingCart className="w-5 h-5" />
                     </motion.button>

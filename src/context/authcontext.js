@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { FiUser, FiX, FiCheck } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import AuthForms from "@/components/AuthForms";
+import {shopifyClient} from "@/lib/shopify";
+import {gql} from "@apollo/client";
+import {useCart} from "@/context/cartcontext";
 
 
 
@@ -23,58 +26,105 @@ export function AuthProvider({ children }) {
         const token = localStorage.getItem('auth_token');
         if (token) {
             // Verify token with your backend
-            setUser({ id: '123', email: 'user@example.com', name: 'Existing User' });
+            getUserFromToken(token);
+
         }
     }, []);
 
+    const getUserFromToken = async (token) => {
+        const query = gql`
+            query getCustomer($input: String!) {
+                customer(customerAccessToken:$input ) {
+                    id
+                    firstName
+                    lastName
+                    acceptsMarketing
+                    email
+                    phone
+                }
+            }`
+        const {data} = await shopifyClient.query({
+            query:query,
+            variables:{input:token}
+        });
+
+        setUser({email:data.customer.email,name:data.customer.firstName,lastName:data.customer.lastName});
+    }
     const login = async (email, password) => {
         setAuthStatus('loading');
         try {
             // Replace with actual login API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            const response = await fetch("/api/loginUser", {
+                method:"POST",
+                headers:{
+                    "Content-Type": "application/json",
+                },
+                body:JSON.stringify({email,password})
+            });
+            if(response.status === 401){
+                const {error} = await response.json();
+                throw new Error({message:error});
+            }else{
+                const {token} = await response.json();
+                setUser({email:email,name:email});
+                localStorage.setItem('auth_token', token);
+                setAuthStatus('success');
+                setIsGuest(false)
+                setTimeout(() => {
+                    setShowAuthModal(false);
+                    router.refresh();
+                }, 1000);
+            }
 
-            const userData = { id: '123', email, name: 'Logged In User' };
-            setUser(userData);
-            localStorage.setItem('auth_token', 'generated_token_here');
-            setAuthStatus('success');
-            setIsGuest(false);
 
-            setTimeout(() => {
-                setShowAuthModal(false);
-                router.refresh();
-            }, 1000);
         } catch (error) {
             setAuthStatus('error');
             setAuthError(error.message);
         }
     };
 
-    const register = async (email, password, name) => {
+    const register = async (email, password, name,lastName) => {
         setAuthStatus('loading');
         try {
             // Replace with actual registration API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            const response = await fetch("/api/registerUser", {
+                method:"POST",
+                headers:{
+                    "Content-Type": "application/json",
+                },
+                body:JSON.stringify({email,password,name,lastName})
+            });
 
-            const userData = { id: '456', email, name };
-            setUser(userData);
-            localStorage.setItem('auth_token', 'generated_token_here');
-            setAuthStatus('success');
-            setIsGuest(false);
+            if(response.status === 401){
+                const {error} = await response.json();
+                throw new Error({message:error});
+            }else{
+                const{ token,email,firstName,lastName } = await response.json();
+                setUser({email,name:firstName,lastName});
+                localStorage.setItem('auth_token', token);
+                setAuthStatus('success');
+                setIsGuest(false);
 
-            setTimeout(() => {
-                setShowAuthModal(false);
-                router.refresh();
-            }, 1000);
+                setTimeout(() => {
+                    setShowAuthModal(false);
+                    router.refresh();
+                }, 1000);
+            }
+
         } catch (error) {
             setAuthStatus('error');
             setAuthError(error.message);
         }
     };
 
-    const logout = () => {
+    const logout = async () => {
         setUser(null);
         setIsGuest(false);
         localStorage.removeItem('auth_token');
+        if(localStorage.getItem('cart_id')){
+            localStorage.removeItem('cart_id');
+        }
+        localStorage.setItem('userEmail', user.email);
         router.refresh();
     };
 

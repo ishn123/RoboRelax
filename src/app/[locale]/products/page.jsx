@@ -24,6 +24,7 @@ const ALL_PRODUCTS_QUERY = gql`
             edges {
               node {
                 id
+                  availableForSale
               }
             }
           }
@@ -38,6 +39,8 @@ export default async function ProductsPage() {
         query: ALL_PRODUCTS_QUERY,
         variables: { first: 12 }
     });
+
+    console.log(data.products)
 
     return (
         <main className="min-h-screen py-20">

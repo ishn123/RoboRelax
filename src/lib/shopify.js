@@ -7,13 +7,13 @@ const httpLink = createHttpLink({
 });
 
 const adminHttpLink = createHttpLink({
-    uri:`https://${process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN}/admin/api/2025-01/graphql.json`
+    uri:`https://${process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN}/admin/api/2025-01/shop.json`
 })
 
 const adminAuthLink = setContext((_, { headers }) => ({
     headers: {
         ...headers,
-        'X-Shopify-Storefront-Access-Token': process.env.ADMIN_SHOPIFY_ACCESS_TOKEN,
+        'X-Shopify-Access-Token': process.env.ADMIN_SHOPIFY_ACCESS_TOKEN,
         'Content-Type': 'application/json',
     }
 }));
@@ -38,19 +38,32 @@ export const shopifyAdminClient = new ApolloClient({
 })
 
 export const CREATE_CHECKOUT = gql`
-  mutation checkoutCreate($input: CheckoutCreateInput!) {
-    checkoutCreate(input: $input) {
-      checkout {
-        id
-        webUrl
-      }
-      checkoutUserErrors {
-        code
-        field
-        message
-      }
+    mutation CreateCart($input: CartInput) {
+        cartCreate(input: $input) {
+            cart {
+                id
+                checkoutUrl
+                lines(first: 10) {
+                    edges {
+                        node {
+                            id
+                            quantity
+                            merchandise {
+                                ... on ProductVariant {
+                                    id
+                                    title
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            userErrors {
+                field
+                message
+            }
+        }
     }
-  }
 `;
 
 export const CHECKOUT_LINE_ITEMS_ADD = gql`
@@ -68,3 +81,26 @@ export const CHECKOUT_LINE_ITEMS_ADD = gql`
     }
   }
 `;
+
+
+export const GET_CUSTOMER_ORDERS = gql`
+    query GetCustomerOrders($customerAccessToken: String!) {
+        customer(customerAccessToken: $customerAccessToken) {
+            orders(first: 10, sortKey: PROCESSED_AT, reverse: true) {
+                edges {
+                    node {
+                        id
+                        name
+                        orderNumber
+                        statusUrl
+                        totalPrice {
+                            amount
+                            currencyCode
+                        }
+                        processedAt
+                    }
+                }
+            }
+        }
+    }
+`

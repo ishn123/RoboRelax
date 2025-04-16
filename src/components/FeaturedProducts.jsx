@@ -27,6 +27,7 @@ const FEATURED_PRODUCTS_QUERY = gql`
                         edges {
                             node {
                                 id
+                                availableForSale
                             }
                         }
                     }
