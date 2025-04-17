@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { FiCalendar, FiClock, FiShoppingCart, FiPlus, FiMinus,FiX } from 'react-icons/fi';
 import Image from 'next/image';
-import {useParams} from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import {shopifyClient} from "@/lib/shopify";
 import {gql} from "@apollo/client";
 import AppointmentForm from "@/components/AppointmentForm";
@@ -20,6 +20,7 @@ export default function ProductPage() {
     const [isFeatured, setIsFeatured] = useState(false);
     const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
     const {addToCart} = useCart();
+    const router = useRouter();
 
     const getNextDates = (count = 4)=>{
         const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
@@ -399,7 +400,12 @@ export default function ProductPage() {
                                         <motion.button
                                             whileHover={{scale: 1.02}}
                                             whileTap={{scale: 0.98}}
-                                            onClick={() => setAppointmentModalOpen(true)}
+                                            onClick={async (e) => {
+                                                const msg = onCreateInvitation();
+                                                localStorage.setItem("msg",msg)
+                                                await handleAddToCart(e);
+                                                router.push('/cart');
+                                            }}
                                             className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold shadow-lg hover:shadow-pink-500/30 transition-all flex items-center justify-center gap-3"
                                         >
                                             <span>Book Appointment</span>

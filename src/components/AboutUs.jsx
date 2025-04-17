@@ -49,7 +49,7 @@ export default function AboutUs() {
                         <div className="relative aspect-square rounded-3xl overflow-hidden border-2 border-white/10">
                             {/* Replace with your actual image */}
                             <div className="absolute inset-0 bg-gradient-to-br from-purple-900 to-pink-800 flex items-center justify-center text-white text-2xl">
-                                <Image src={my_img} fill alt="My Image"/>
+                                <Image src={my_img}  alt="My Image" className="object-contain h-full w-full"/>
                             </div>
                         </div>
 

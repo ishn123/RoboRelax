@@ -56,8 +56,8 @@ const CartPage = () => {
     //     const timer = setTimeout(() => setIsAnimating(false), 500);
     //     return () => clearTimeout(timer);
     // }, [currentCart?.lines.edges]);
-
-    if (!currentCart || currentCart.lines.edges.length == 0) return <EmptyCart />;
+    console.log(currentCart,"efefef")
+    if (!currentCart || currentCart.lines.edges.length === 0) return <EmptyCart />;
 
     async function decreaseQuant(id, number) {
         await updateCart(id, number);
@@ -65,6 +65,11 @@ const CartPage = () => {
 
     async function increaseQuant(id, number) {
         await updateCart(id, number);
+    }
+
+    async function handledeleteCart(lineId){
+
+        await deleteCartItem(lineId);
     }
 
     return (
@@ -123,7 +128,7 @@ const CartPage = () => {
                                     <div className="text-pink-600 font-bold text-xl mr-8">
                                         €{(Number(item.node.merchandise.price.amount) * item.node.quantity).toFixed(2)}
                                     </div>
-                                    <button className="text-gray-400 hover:text-pink-600 transition-colors" onClick={()=>deleteCartItem(item.node.id)}>
+                                    <button className="text-gray-400 hover:text-pink-600 transition-colors" onClick={()=>handledeleteCart(item.node.id)}>
                                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>

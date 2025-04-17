@@ -2,20 +2,25 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { FiMail, FiLock, FiUser as FiName } from 'react-icons/fi';
+import { FiMail, FiLock, FiUser as FiName, FiMapPin, FiHome, FiNavigation } from 'react-icons/fi';
 
 export default function AuthForms({ onLogin, onRegister, error }) {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
+    const [street, setStreet] = useState('');
+    const [city, setCity] = useState('');
+    const [state, setState] = useState('');
+    const [zipCode, setZipCode] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isLogin) {
             onLogin(email, password);
         } else {
-            onRegister(email, password, name);
+            console.log(street)
+            onRegister(email, password, name, street, city, state, zipCode );
         }
     };
 
@@ -57,27 +62,104 @@ export default function AuthForms({ onLogin, onRegister, error }) {
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden"
-                    >
-                        <label className="block text-sm font-medium text-gray-400 mb-1">Full Name</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FiName className="text-gray-500" />
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            transition={{ duration: 0.3 }}
+                            className="overflow-hidden"
+                        >
+                            <label className="block text-sm font-medium text-gray-400 mb-1">Full Name</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <FiName className="text-gray-500" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    required={!isLogin}
+                                    className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+                                    placeholder="Your Name"
+                                />
                             </div>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required={!isLogin}
-                                className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
-                                placeholder="Your Name"
-                            />
-                        </div>
-                    </motion.div>
+                        </motion.div>
+
+                        {/* Address Fields */}
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
+                            className="overflow-hidden space-y-4"
+                        >
+                            <h3 className="text-sm font-medium text-gray-400 mb-1 flex items-center">
+                                <FiMapPin className="mr-2" /> Address Information
+                            </h3>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-400 mb-1">Street Address</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <FiHome className="text-gray-500" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={street}
+                                        onChange={(e) => setStreet(e.target.value)}
+                                        required={!isLogin}
+                                        className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+                                        placeholder="123 Main St"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1">City</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={city}
+                                            onChange={(e) => setCity(e.target.value)}
+                                            required={!isLogin}
+                                            className="w-full pl-3 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+                                            placeholder="City"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1">State</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={state}
+                                            onChange={(e) => setState(e.target.value)}
+                                            required={!isLogin}
+                                            className="w-full pl-3 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+                                            placeholder="State"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-400 mb-1">Zip Code</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <FiNavigation className="text-gray-500" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={zipCode}
+                                        onChange={(e) => setZipCode(e.target.value)}
+                                        required={!isLogin}
+                                        className="w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+                                        placeholder="12345"
+                                    />
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
                 )}
 
                 <div>

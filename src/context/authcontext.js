@@ -28,6 +28,8 @@ export function AuthProvider({ children }) {
             // Verify token with your backend
             getUserFromToken(token);
 
+        }else{
+            setIsGuest(true);
         }
     }, []);
 
@@ -83,7 +85,7 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const register = async (email, password, name,lastName) => {
+    const register = async (email, password, name,lastName="",street, city, state, zipCode) => {
         setAuthStatus('loading');
         try {
             // Replace with actual registration API call
@@ -92,10 +94,10 @@ export function AuthProvider({ children }) {
                 headers:{
                     "Content-Type": "application/json",
                 },
-                body:JSON.stringify({email,password,name,lastName})
+                body:JSON.stringify({email,password,name,lastName,street,city,state,zipCode})
             });
 
-            if(response.status === 401){
+            if(response.status === 401 || response.status === 400){
                 const {error} = await response.json();
                 throw new Error({message:error});
             }else{
@@ -119,7 +121,7 @@ export function AuthProvider({ children }) {
 
     const logout = async () => {
         setUser(null);
-        setIsGuest(false);
+        setIsGuest(true);
         localStorage.removeItem('auth_token');
         if(localStorage.getItem('cart_id')){
             localStorage.removeItem('cart_id');
@@ -143,7 +145,8 @@ export function AuthProvider({ children }) {
                 logout,
                 continueAsGuest,
                 showAuthModal,
-                setShowAuthModal
+                setShowAuthModal,
+                setIsGuest
             }}
         >
             {children}
@@ -167,7 +170,7 @@ export function AuthProvider({ children }) {
                                     <FiX className="text-white" />
                                 </button>
 
-                                <div className="p-8">
+                                <div className="p-8 h-[90vh] overflow-y-scroll">
                                     <div className="text-center mb-8">
                                         <div className="w-20 h-20 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center mx-auto mb-4">
                                             <FiUser className="text-white text-2xl" />

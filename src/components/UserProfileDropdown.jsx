@@ -3,11 +3,13 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiUser, FiShoppingBag, FiHeart, FiLogOut } from 'react-icons/fi';
 import { useAuth } from '@/context/authcontext';
-import {useState} from "react";
+import {useContext, useState} from "react";
+import {useCart} from "@/context/cartcontext";
 
 export default function UserDropdown() {
     const { user, isGuest, logout, setShowAuthModal } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
+    const {saveCartBeforeUserLogoutIfExists} = useCart();
 
     return (
         <div className="relative">
@@ -82,7 +84,8 @@ export default function UserDropdown() {
                             <button
                                 onClick={() => {
                                     if (user || isGuest) {
-                                        logout();
+                                        if(isGuest)logout();
+                                        else saveCartBeforeUserLogoutIfExists().then(r=>logout());
                                     } else {
                                         setShowAuthModal(true);
                                     }

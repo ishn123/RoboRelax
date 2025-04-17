@@ -4,9 +4,11 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/cartcontext';
 import { useMutation } from '@apollo/client';
 import {CREATE_CHECKOUT, shopifyClient} from "@/lib/shopify";
+import {useAuth} from "@/context/authcontext";
 
 export default function CheckoutPage() {
     const router = useRouter();
+    const {user,setShowAuthModal} = useAuth();
     const { cart: currentCart } = useCart();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -17,10 +19,16 @@ export default function CheckoutPage() {
             setError('Your cart is empty');
             return;
         }
+        if(!user){
+            setShowAuthModal(true);
+            return;
+        }
 
         setLoading(true);
         setError(null);
         console.log(currentCart)
+
+
         try {
             // Create Shopify checkout with the cart ID
             const { data } = await createCheckout({
