@@ -50,6 +50,8 @@ export function AuthProvider({ children }) {
             variables:{input:token}
         });
 
+        console.log(data)
+
         setUser({email:data.customer.email,name:data.customer.firstName,lastName:data.customer.lastName});
     }
     const login = async (email, password) => {
@@ -63,9 +65,11 @@ export function AuthProvider({ children }) {
                 },
                 body:JSON.stringify({email,password})
             });
-            if(response.status === 401){
+            if(response.status === 401 || response.status === 400){
                 const {error} = await response.json();
-                throw new Error({message:error});
+                console.log(error)
+                setAuthStatus('error');
+                setAuthError("User doesn't exist! Kindly register");
             }else{
                 const {token} = await response.json();
                 setUser({email:email,name:email});
@@ -80,6 +84,7 @@ export function AuthProvider({ children }) {
 
 
         } catch (error) {
+            console.log(error)
             setAuthStatus('error');
             setAuthError(error.message);
         }
@@ -99,7 +104,9 @@ export function AuthProvider({ children }) {
 
             if(response.status === 401 || response.status === 400){
                 const {error} = await response.json();
-                throw new Error({message:error});
+                setAuthStatus('error');
+                setAuthError("User already exists! Kindly login");
+
             }else{
                 const{ token,email,firstName,lastName } = await response.json();
                 setUser({email,name:firstName,lastName});

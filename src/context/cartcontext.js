@@ -45,6 +45,12 @@ const DELETE_CART_ITEM = gql`mutation cartLinesRemove($cartId: ID!, $lineIds: [I
                     email
                 }
             }
+            estimatedCost {
+                totalAmount {
+                    amount
+                    currencyCode
+                }
+            }
         }
         userErrors {
             field
@@ -90,8 +96,14 @@ mutation cartCreate($input: CartInput) {
                 }
             }
         }
-            
+
+        estimatedCost {
+            totalAmount {
+                amount
+                currencyCode
+            }
         }
+      }
     }
   }`;
 
@@ -330,9 +342,46 @@ export const CartProvider = ({ children }) => {
         const mutation = gql`
     mutation cartBuyerIdentityUpdate($cartId: ID!, $buyerIdentity: CartBuyerIdentityInput!) {
       cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: { customerAccessToken: $customerAccessToken }) {
-        cart {
-          id
-        }
+          cart {
+              id
+              lines(first: 10) {
+                  edges {
+                      node {
+                          id
+                          quantity
+                          merchandise {
+                              ... on ProductVariant {
+                                  id
+                                  title
+                                  price{
+                                      amount
+                                      currencyCode
+                                  }
+                                  product {
+                                      title
+                                      featuredImage {
+                                          url
+                                      }
+
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+              estimatedCost {
+                  totalAmount {
+                      amount
+                      currencyCode
+                  }
+              }
+              buyerIdentity{
+                  customer{
+                      email
+                  }
+              }
+              checkoutUrl
+          }
       }
     }
   `;
@@ -340,16 +389,16 @@ export const CartProvider = ({ children }) => {
         const res = await shopifyClient.query({
             query: mutation,
             variables: { cartId,
-                customerAccessToken:localStorage.getItem('auth_token')
+                buyerIdentity: {
+                    customerAccessToken: localStorage.getItem('auth_token')
+                }
             },
         });
 
 
-        console.log("ofmof3",res)
-        return res?.data?.cart?.lines?.edges?.map(({ node }) => ({
-            quantity: node.quantity,
-            merchandiseId: node.merchandise.id,
-        }));
+        setCartId(res.data.cartBuyerIdentityUpdate.cart.id);
+        setCartId(res.data.cartBuyerIdentityUpdate.cart);
+        setTotalItems(res.data.cartBuyerIdentityUpdate.cart.lines.edges.length);
     }
 
     async function addItemsToCart(cartId, items) {
@@ -383,19 +432,26 @@ export const CartProvider = ({ children }) => {
 
                 setCartId(data.cart.id); // Update global context or localStorage
                 setCart(data.cart)
+                setTotalItems(data.cart.lines.edges.length);
             }else {
-                setCartId(userCart.id); // Update global context or localStorage
-                setCart(userCart)
+                setCartId(userCart.cart.id); // Update global context or localStorage
+                setCart(userCart.cart)
+                setTotalItems(userCart.cart.lines.edges.length);
             }
         } else {
             await attachBuyerIdentity(guestCartId, customerCartId);
             setCartId(guestCartId);
 
+
         }
+
+
 
     }
     async function getGuestCartItems(cartId) {
-        console.log(cartId)
+        if(!cartId){
+            cartId = localStorage.getItem('cart_id');
+        }
         const query = gql`
     query($cartId: ID!) {
       cart(id: $cartId) {
@@ -471,24 +527,22 @@ export const CartProvider = ({ children }) => {
             })
             await saveUserCart(user.email,data.cartBuyerIdentityUpdate.cart.id);
         }else{
-            await refreshEntireCart();
+
         }
+        await refreshEntireCart();
     }
 
     const refreshEntireCart = async()=>{
         await createCart();
     }
 
-    // Hooks for the initial mounting
-    useEffect(()=>{
-        if(!cartId){
-            createCart();
-        }
-    },[])
     // When the component mount initially
     useEffect(() => {
-        if(!user)return;
-        fetchCartBasedOnUserId(user.email);
+        if(!user){
+            createCart();
+        }else{
+            fetchCartBasedOnUserId(user.email);
+        }
 
     }, [user]);
 
@@ -513,6 +567,7 @@ export const CartProvider = ({ children }) => {
         const newCartId = data.data.cartCreate.cart.id;
         setCart(data.data.cartCreate.cart);
         setCartId(newCartId);
+        setTotalItems(data.data.cartCreate.cart.lines.edges.length);
         localStorage.setItem('cart_id',newCartId);
 
     };
@@ -545,7 +600,7 @@ export const CartProvider = ({ children }) => {
 
         setCart(data.cartLinesAdd.cart);
         setCartId(data.cartLinesAdd.cart.id);
-        fetchCart(data.cartLinesAdd.cart.id,true);
+        //fetchCart(data.cartLinesAdd.cart.id,true);
     };
 
     const updateCart = async(lineId,quantity)=>{
@@ -559,12 +614,15 @@ export const CartProvider = ({ children }) => {
                         quantity:quantity
                     }
                 ]
-            }
+            },
         })
 
         console.log(data);
+        setCartId(data.cartLinesUpdate.cart.id);
+        setCart(data.cartLinesUpdate.cart);
+        setTotalItems(data.cartLinesUpdate.cart.lines.edges.length);
 
-        await fetchCart(data.cartLinesUpdate.cart.id,false);
+        //await fetchCart(data.cartLinesUpdate.cart.id,false);
 
 
 
@@ -580,6 +638,7 @@ export const CartProvider = ({ children }) => {
 
         setCartId(data.cartLinesRemove.cart.id);
         setCart(data.cartLinesRemove.cart);
+        setTotalItems(data.cartLinesRemove.cart.lines.edges.length);
 
     }
 

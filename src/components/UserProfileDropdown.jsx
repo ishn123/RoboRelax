@@ -63,13 +63,6 @@ export default function UserDropdown() {
                                         <FiShoppingBag className="mr-3" />
                                         My Orders
                                     </a>
-                                    <a
-                                        href="/wishlist"
-                                        className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
-                                    >
-                                        <FiHeart className="mr-3" />
-                                        Wishlist
-                                    </a>
                                 </>
                             ) : (
                                 <button
