@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [authStatus, setAuthStatus] = useState('idle');
     const [authError, setAuthError] = useState('');
+    const [resetPassword, setResetPassword] = useState('');
     const router = useRouter();
 
     // Check for existing session on mount
@@ -43,6 +44,13 @@ export function AuthProvider({ children }) {
                     acceptsMarketing
                     email
                     phone
+                    addresses(first: 2){
+                        nodes{
+                            address1
+                            city
+
+                        }
+                    }
                 }
             }`
         const {data} = await shopifyClient.query({
@@ -52,7 +60,7 @@ export function AuthProvider({ children }) {
 
         console.log(data)
 
-        setUser({email:data.customer.email,name:data.customer.firstName,lastName:data.customer.lastName});
+        setUser({id:data.customer.id,email:data.customer.email,name:data.customer.firstName,lastName:data.customer.lastName,addresses:data.customer.addresses.nodes});
     }
     const login = async (email, password) => {
         setAuthStatus('loading');
@@ -126,6 +134,43 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const onForgetPassword = async (email) => {
+        setAuthStatus('loading')
+        const RESET_PASSWORD_MUTATION = gql`
+            mutation customerRecover($email: String!) {
+                customerRecover(email: $email) {
+                    customerUserErrors {
+                        # CustomerUserError fields
+                        message
+                    }
+                    userErrors {
+                        field
+                        message
+                    }
+                }
+            }
+        `;
+
+        const {data} = await shopifyClient.mutate({
+            mutation:RESET_PASSWORD_MUTATION,
+            variables:{email:email}
+        });
+
+        if(data.customerRecover.userErrors.length > 0){
+            setAuthStatus('error')
+            setAuthError('User email doesnt exist! Kindly register');
+        }else{
+            setAuthStatus('success')
+            setResetPassword('Reset Password Link Sent')
+            setTimeout(() => {
+                setShowAuthModal(false);
+                setResetPassword('')
+                router.refresh();
+            },1000);
+        }
+
+    }
+
     const logout = async () => {
         setUser(null);
         setIsGuest(true);
@@ -190,6 +235,7 @@ export function AuthProvider({ children }) {
                                                 ? 'You are now logged in'
                                                 : 'Login or register for a personalized experience'}
                                         </p>
+
                                     </div>
 
                                     <AnimatePresence mode="wait">
@@ -204,7 +250,7 @@ export function AuthProvider({ children }) {
                                                 <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                                     <FiCheck className="text-green-400 text-2xl" />
                                                 </div>
-                                                <p className="text-gray-300">You re all set!</p>
+                                                <p className="text-gray-300">{resetPassword!==" "?resetPassword:"You re all set!"}</p>
                                             </motion.div>
                                         ) : authStatus === 'loading' ? (
                                             <motion.div
@@ -233,6 +279,8 @@ export function AuthProvider({ children }) {
                                                     onLogin={login}
                                                     onRegister={register}
                                                     error={authError}
+                                                    onForgotPassword={onForgetPassword}
+
                                                 />
 
                                                 <div className="pt-4">
