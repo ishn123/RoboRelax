@@ -243,7 +243,7 @@ export default function AuthForms({ onLogin, onRegister, onForgotPassword, error
                         </div>
                     </div>
 
-                    {isLogin && (
+                    {(
                         <div>
                             <label className="block text-sm font-medium text-gray-400 mb-1">Password</label>
                             <div className="relative">
@@ -260,6 +260,7 @@ export default function AuthForms({ onLogin, onRegister, onForgotPassword, error
                                     minLength={6}
                                 />
                             </div>
+                            {isLogin && (
                             <div className="text-right mt-2">
                                 <button
                                     type="button"
@@ -268,7 +269,7 @@ export default function AuthForms({ onLogin, onRegister, onForgotPassword, error
                                 >
                                     Forgot password?
                                 </button>
-                            </div>
+                            </div>)}
                         </div>
                     )}
 

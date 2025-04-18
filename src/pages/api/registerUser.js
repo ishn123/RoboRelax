@@ -37,6 +37,7 @@ export default async function handler(req, res) {
     console.log(response)
     const errors = response.data.customerCreate.customerUserErrors;
     console.log(response.data.customerCreate.customer);
+    console.log(errors)
     if (errors.length > 0) {
         return res.status(400).json({ error: errors[0].message });
     }
