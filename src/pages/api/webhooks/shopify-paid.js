@@ -7,6 +7,7 @@ export default async function handler(req, res) {
     }
 
     const hmacHeader = req.headers['x-shopify-hmac-sha256'];
+    console.log(req.body)
     const rawBody = JSON.parse(req.body); // You may need raw body for verification
 
     // TODO: Verify HMAC (optional but recommended)
