@@ -6,7 +6,8 @@ export async function saveUserCart(userId, cartId) {
     await setDoc(doc(db, "userCarts", userId), {
         cartId,
         updatedAt: new Date().toISOString()
-    });
+    },
+        {merge:true});
 }
 
 export async function getUserCart(userId) {
