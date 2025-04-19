@@ -9,6 +9,8 @@ import {shopifyClient} from "@/lib/shopify";
 import {gql} from "@apollo/client";
 import AppointmentForm from "@/components/AppointmentForm";
 import {useCart} from "@/context/cartcontext";
+import {saveEmailTemplateForCurrentUser} from "@/lib/cart";
+import {useAuth} from "@/context/authcontext";
 
 export default function ProductPage() {
     const [product, setProduct] = useState(null);
@@ -21,6 +23,14 @@ export default function ProductPage() {
     const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
     const {addToCart} = useCart();
     const router = useRouter();
+    const {user,
+        isGuest,
+        login,
+        register,
+        showAuthModal,
+        setShowAuthModal,
+        setIsGuest,
+        setUser} = useAuth();
 
     const getNextDates = (count = 4)=>{
         const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
@@ -40,14 +50,44 @@ export default function ProductPage() {
         return res;
 
     }
+    const waitForLogin = ()=>{
+        return new Promise((resolve,reject)=>{
+            setShowAuthModal(true);
+            let isResolved = false;
+            const checkLogin = setInterval(()=>{
+                if(user){
+                    setShowAuthModal(false);
+                    resolve(true);
+                }
+            },500);
 
-    const onCreateInvitation = ()=>{
+            const handleModalClose = () => {
+                console.log("Triggereed")
+                if (!isResolved) {
+                    clearInterval(checkLogin);
+                    resolve(false);
+                }
+            };
+            window.addEventListener("authModalClosed", handleModalClose, { once: true });
+        })
+    }
 
+    const onCreateInvitation = async ()=>{
+
+        if (!user) {
+            const loginSuccess = await waitForLogin(); // wait until user logs in
+            if (!loginSuccess) return false; // user closed modal or cancelled login
+        }
         const p1 = "Hey your booking for the product" + product.title;
         const p2 = product.selectedVariant?product.selectedVariant.node.title:""
         const p3 = "has been scheduled for the date " + selectedDate.fullDate + " at the time" + selectedTimeSlot
 
-        return p1 + " " + p2 + " " +  p3;
+
+        if(user){
+            const key = product.selectedVariant.node.id.split("/").slice(-1)[0];
+            await saveEmailTemplateForCurrentUser(user.email,key,p1+" "+p2+" "+p3);
+        }
+        return true;
     }
 
     const changeVariant = (variant) => {
@@ -401,10 +441,11 @@ export default function ProductPage() {
                                             whileHover={{scale: 1.02}}
                                             whileTap={{scale: 0.98}}
                                             onClick={async (e) => {
-                                                const msg = onCreateInvitation();
-                                                localStorage.setItem("msg",msg)
-                                                await handleAddToCart(e);
-                                                router.push('/cart');
+                                                const res = await onCreateInvitation();
+                                                if(res) {
+                                                    await handleAddToCart(e);
+                                                    router.push('/cart');
+                                                }
                                             }}
                                             className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold shadow-lg hover:shadow-pink-500/30 transition-all flex items-center justify-center gap-3"
                                         >

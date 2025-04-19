@@ -198,7 +198,8 @@ export function AuthProvider({ children }) {
                 continueAsGuest,
                 showAuthModal,
                 setShowAuthModal,
-                setIsGuest
+                setIsGuest,
+                setUser
             }}
         >
             {children}
@@ -216,7 +217,11 @@ export function AuthProvider({ children }) {
                         >
                             <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
                                 <button
-                                    onClick={() => setShowAuthModal(false)}
+                                    onClick={() => {
+                                        setShowAuthModal(false);
+                                        const event = new CustomEvent("authModalClosed");
+                                        window.dispatchEvent(event);
+                                    }}
                                     className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
                                 >
                                     <FiX className="text-white" />

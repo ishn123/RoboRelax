@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useCart } from "@/context/cartcontext";
 import {useRouter} from "next/navigation";
+import {checkIfAppointmentExists, removeEmailTemplateForCurrentUser} from "@/lib/cart";
+import {useAuth} from "@/context/authcontext";
 
 const EmptyCart = () => (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
@@ -43,6 +45,7 @@ const CartPage = () => {
     const [currentCart, setCurrentCart] = useState(null);
     const [isAnimating, setIsAnimating] = useState(false);
     const router = useRouter();
+    const {user} = useAuth();
 
     const proceedToCheckout = ()=>{
         router.push("/checkout")
@@ -67,9 +70,23 @@ const CartPage = () => {
         await updateCart(id, number);
     }
 
-    async function handledeleteCart(lineId){
+    async function handledeleteCart(lineId,pid){
 
-        await deleteCartItem(lineId);
+        const res = await deleteCartItem(lineId);
+        console.log(res);
+        if(res){
+            if(user) {
+                const key = pid.split("/").slice(-1)[0];
+
+                const result = await checkIfAppointmentExists(user.email, key);
+                if(result!=null){
+                    await removeEmailTemplateForCurrentUser(user.email, key);
+                    console.log("Removed template");
+                }
+
+            }
+
+        }
     }
 
     return (
@@ -128,7 +145,7 @@ const CartPage = () => {
                                     <div className="text-pink-600 font-bold text-xl mr-8">
                                         €{(Number(item.node.merchandise.price.amount) * item.node.quantity).toFixed(2)}
                                     </div>
-                                    <button className="text-gray-400 hover:text-pink-600 transition-colors" onClick={()=>handledeleteCart(item.node.id)}>
+                                    <button className="text-gray-400 hover:text-pink-600 transition-colors" onClick={()=>handledeleteCart(item.node.id,item.node.merchandise.id)}>
                                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>

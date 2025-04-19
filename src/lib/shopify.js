@@ -52,6 +52,10 @@ export const CREATE_CHECKOUT = gql`
                                 ... on ProductVariant {
                                     id
                                     title
+                                    product {
+                                        title
+                                        tags
+                                    }
                                 }
                             }
                         }

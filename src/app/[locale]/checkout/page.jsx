@@ -28,6 +28,7 @@ export default function CheckoutPage() {
         setError(null);
         console.log(currentCart)
 
+        //const appointmentBasedProducts = currentCart.
 
         try {
             // Create Shopify checkout with the cart ID
@@ -47,7 +48,8 @@ export default function CheckoutPage() {
 
             console.log(data)
             if (currentCart?.checkoutUrl) {
-                // Redirect to Shopify's checkout page
+                // Redirect to Shopify checkout page
+
                 window.location.href = currentCart?.checkoutUrl;
             } else {
                 throw new Error('Failed to create checkout');

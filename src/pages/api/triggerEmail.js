@@ -6,14 +6,14 @@ export default async function POST(req, res) {
     }
 
     try {
-        const { userEmail,message } = req.body;
+        const { customerEmail,value } = req.body;
 
-        console.log(userEmail,message);
+        console.log(customerEmail,value);
 
         await sendEmail({
-            to: userEmail,
+            to: customerEmail,
             subject: 'New Submission',
-            html: `<h2>Appointment confirmed ${message}</h2>`
+            html: `<h2>Appointment confirmed ${value}</h2>`
 
         });
 

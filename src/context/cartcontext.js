@@ -32,6 +32,7 @@ const DELETE_CART_ITEM = gql`mutation cartLinesRemove($cartId: ID!, $lineIds: [I
                                     featuredImage {
                                         url
                                     }
+                                    tags
 
                                 }
                             }
@@ -89,6 +90,7 @@ mutation cartCreate($input: CartInput) {
                                 featuredImage {
                                     url
                                 }
+                                tags
 
                             }
                         }
@@ -129,6 +131,7 @@ query getCart($cartId: ID!) {
                 featuredImage {
                   url
                 }
+                  tags
                   
               }
             }
@@ -171,6 +174,7 @@ const UPDATE_CART_MUTATION = gql`
                       featuredImage {
                         url
                       }
+                        tags
                     }
                     price {
                       amount
@@ -224,6 +228,7 @@ mutation cartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!) {
                                   featuredImage {
                                       url
                                   }
+                                  tags
 
                               }
                           }
@@ -271,6 +276,7 @@ const CART_BUYER_IDENTITY_UPDATE = gql`
                                     featuredImage {
                                         url
                                     }
+                                    tags
 
                                 }
                             }
@@ -539,7 +545,11 @@ export const CartProvider = ({ children }) => {
     // When the component mount initially
     useEffect(() => {
         if(!user){
-            createCart();
+            if(localStorage.getItem('cart_id')){
+                fetchCart(localStorage.getItem('cart_id'),false);
+            }else{
+                createCart();
+                }
         }else{
             fetchCartBasedOnUserId(user.email);
         }
@@ -630,7 +640,9 @@ export const CartProvider = ({ children }) => {
 
     const deleteCartItem = async (lineId) => {
 
-
+        const isAppointment = cart.lines.edges.find((line)=>{
+            return lineId === line.node.id  && line.node.merchandise.product.tags.includes("featured");
+        })
         const {data} = await shopifyClient.mutate({
             mutation:DELETE_CART_ITEM,
             variables:{cartId,lineIds: [lineId]}
@@ -639,6 +651,11 @@ export const CartProvider = ({ children }) => {
         setCartId(data.cartLinesRemove.cart.id);
         setCart(data.cartLinesRemove.cart);
         setTotalItems(data.cartLinesRemove.cart.lines.edges.length);
+
+        if(isAppointment){
+            return true;
+        }
+        return false;
 
     }
 
