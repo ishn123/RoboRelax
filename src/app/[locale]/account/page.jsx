@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     FiUser, FiMail, FiMapPin, FiShoppingBag,
     FiEdit, FiSave, FiX, FiChevronDown, FiChevronUp,
-    FiExternalLink, FiImage, FiPlus, FiStar, FiCheck
+    FiExternalLink, FiImage, FiPlus, FiStar, FiCheck, FiSettings,FiLock
 } from 'react-icons/fi';
 import { gql } from "@apollo/client";
 import { shopifyClient } from "@/lib/shopify";
@@ -18,6 +18,14 @@ const ProfilePage = () => {
         addresses: [] // Now stores all addresses
     });
     const [defaultAddressId, setDefaultAddressId] = useState(null);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [passwordForm, setPasswordForm] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [passwordError, setPasswordError] = useState(null);
+    const [passwordSuccess, setPasswordSuccess] = useState(null);
 
     const [orders, setOrders] = useState([]);
     const [activeTab, setActiveTab] = useState('orders');
@@ -415,6 +423,66 @@ const ProfilePage = () => {
         }
     };
 
+    const handleChangePassword = async () => {
+        try {
+            if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+                setPasswordError("New passwords don't match");
+                return;
+            }
+
+            setPasswordError(null);
+            setPasswordSuccess(null);
+
+            const UPDATE_PASSWORD = gql`
+                mutation customerUpdate($customerAccessToken: String!, $customer: CustomerUpdateInput!) {
+                    customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
+                        customer {
+                            id
+                        }
+                        customerAccessToken {
+                            accessToken
+                            expiresAt
+                        }
+                        customerUserErrors {
+                            code
+                            field
+                            message
+                        }
+                    }
+                }
+            `;
+
+            const response = await shopifyClient.mutate({
+                mutation: UPDATE_PASSWORD,
+                variables: {
+                    customerAccessToken: localStorage.getItem('auth_token'),
+                    customer: {
+                        password: passwordForm.newPassword
+                    }
+                }
+            });
+
+            const errors = response.data?.customerUpdate?.customerUserErrors;
+
+            if (errors && errors.length > 0) {
+                setPasswordError(errors[0].message);
+            } else {
+                setPasswordSuccess('Password updated successfully!');
+                setPasswordForm({
+                    currentPassword: '',
+                    newPassword: '',
+                    confirmPassword: ''
+                });
+
+                const newToken = response?.data?.customerUpdate?.customerAccessToken.accessToken;
+                localStorage.setItem('auth_token', newToken);
+            }
+        } catch (error) {
+            console.error('Error updating password:', error);
+            setPasswordError('Failed to update password. Please try again.');
+        }
+    };
+
     useEffect(() => {
         fetchCustomerData();
         // Check for saved theme preference or system preference
@@ -469,7 +537,7 @@ const ProfilePage = () => {
                                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                         >
-                            <FiShoppingBag />
+                            <FiShoppingBag/>
                             <span>My Orders</span>
                         </button>
                         <button
@@ -480,8 +548,19 @@ const ProfilePage = () => {
                                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                         >
-                            <FiMapPin />
+                            <FiMapPin/>
                             <span>Addresses</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('account')}
+                            className={`flex-1 py-4 font-medium flex items-center justify-center space-x-2 ${
+                                activeTab === 'account'
+                                    ? 'text-pink-500 dark:text-pink-400 border-b-2 border-pink-500 dark:border-pink-400'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                            }`}
+                        >
+                            <FiSettings/>
+                            <span>Account</span>
                         </button>
                     </div>
 
@@ -587,7 +666,6 @@ const ProfilePage = () => {
                                 )}
                             </motion.div>
                         )}
-
                         {activeTab === 'address' && (
                             <motion.div variants={slideUp} className="space-y-6">
                                 <div className="flex justify-between items-center">
@@ -825,6 +903,116 @@ const ProfilePage = () => {
                                         </div>
                                     </motion.div>
                                 )}
+                            </motion.div>
+                        )}
+                        {activeTab === 'account' && (
+                            <motion.div variants={slideUp} className="space-y-6">
+                                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Account Settings</h2>
+
+                                <div className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-sm">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="font-medium text-gray-800 dark:text-gray-200">Change Password</h3>
+                                        <button
+                                            onClick={() => setIsChangingPassword(!isChangingPassword)}
+                                            className="text-pink-500 dark:text-pink-400 flex items-center space-x-1"
+                                        >
+                                            {isChangingPassword ? <FiX className="w-4 h-4" /> : <FiEdit className="w-4 h-4" />}
+                                            <span>{isChangingPassword ? 'Cancel' : 'Change'}</span>
+                                        </button>
+                                    </div>
+
+                                    {passwordError && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4"
+                                        >
+                                            {passwordError}
+                                        </motion.div>
+                                    )}
+
+                                    {passwordSuccess && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg mb-4"
+                                        >
+                                            {passwordSuccess}
+                                        </motion.div>
+                                    )}
+
+                                    {isChangingPassword && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            className="space-y-4"
+                                        >
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    Current Password
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    value={passwordForm.currentPassword}
+                                                    onChange={(e) => setPasswordForm({
+                                                        ...passwordForm,
+                                                        currentPassword: e.target.value
+                                                    })}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-pink-500 focus:border-pink-500 dark:focus:ring-pink-400 dark:focus:border-pink-400 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                                                    placeholder="Enter current password"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    New Password
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    value={passwordForm.newPassword}
+                                                    onChange={(e) => setPasswordForm({
+                                                        ...passwordForm,
+                                                        newPassword: e.target.value
+                                                    })}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-pink-500 focus:border-pink-500 dark:focus:ring-pink-400 dark:focus:border-pink-400 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                                                    placeholder="Enter new password"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    Confirm New Password
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    value={passwordForm.confirmPassword}
+                                                    onChange={(e) => setPasswordForm({
+                                                        ...passwordForm,
+                                                        confirmPassword: e.target.value
+                                                    })}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-pink-500 focus:border-pink-500 dark:focus:ring-pink-400 dark:focus:border-pink-400 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                                                    placeholder="Confirm new password"
+                                                />
+                                            </div>
+
+                                            <div className="pt-2">
+                                                <button
+                                                    onClick={handleChangePassword}
+                                                    className="w-full bg-pink-500 dark:bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-600 dark:hover:bg-pink-700 transition-colors"
+                                                >
+                                                    Update Password
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    )}
+
+                                    {!isChangingPassword && (
+                                        <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
+                                            <FiLock className="w-4 h-4" />
+                                            <span>Last changed: {formatDate(new Date().toISOString())}</span>
+                                        </div>
+                                    )}
+                                </div>
                             </motion.div>
                         )}
                     </div>

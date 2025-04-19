@@ -54,6 +54,30 @@ export async function removeEmailTemplateForCurrentUser(userId,key) {
     }
 }
 
+export async function RemoveEverythingAfterSuccessfullPayment(userId){
+    try {
+        const docRef = doc(db, "userCarts", userId);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            console.log("No document found for user:", userId);
+            return;
+        }
+
+        const data = docSnap.data();
+        const fieldsToDelete = {};
+
+        Object.keys(data).forEach((key) => {
+            fieldsToDelete[key] = deleteField();
+        });
+
+        await updateDoc(docRef, fieldsToDelete);
+        console.log(`All fields cleared for userId: ${userId}`);
+    } catch (error) {
+        console.error("Error clearing fields:", error);
+    }
+}
+
 export async function checkIfAppointmentExists(userId,key) {
     const docSnap = await getDoc(doc(db, "userCarts", userId));
     const field = "emailTemplate" + key;

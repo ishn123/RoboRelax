@@ -1,5 +1,5 @@
 // /pages/api/webhooks/shopify-order-paid.ts
-import {getAllFieldsForUser} from "@/lib/cart";
+import {getAllFieldsForUser, RemoveEverythingAfterSuccessfullPayment} from "@/lib/cart";
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -38,6 +38,7 @@ export default async function handler(req, res) {
                 body: JSON.stringify({customerEmail, value})
             })
             if (result.status === 200) {
+                await RemoveEverythingAfterSuccessfullPayment(customerEmail);
                 console.log("Mail sent");
                 res.status(200).send("OK");
             } else {

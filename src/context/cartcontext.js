@@ -314,11 +314,15 @@ export const CartProvider = ({ children }) => {
     const fetchCartBasedOnUserId = async(userId)=>{
 
         const data = await getUserCart(userId);
+        console.log("user cart data",data)
         if(data == null){
+            if(cartId==null){
+                await createCart();
+            }
             const {data} = await shopifyClient.mutate({
                     mutation:CART_BUYER_IDENTITY_UPDATE,
                     variables:{
-                        cartId,
+                        cartId:localStorage.getItem("cart_id"),
                         buyerIdentity:{
                             customerAccessToken:localStorage.getItem('auth_token')
                         }
@@ -418,7 +422,6 @@ export const CartProvider = ({ children }) => {
     }
 
     async function getCustomerCart(customerCartId) {
-        console.log("fefefefeffefef",customerCartId)
         const {data} = await shopifyClient.query({
             query: GET_CART,
             variables:{cartId:customerCartId}
