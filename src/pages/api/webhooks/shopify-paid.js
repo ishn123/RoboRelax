@@ -1,5 +1,5 @@
 // /pages/api/webhooks/shopify-order-paid.ts
-import {checkIfAppointmentExists, getAllFieldsForUser} from "@/lib/cart";
+import {getAllFieldsForUser} from "@/lib/cart";
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -8,12 +8,11 @@ export default async function handler(req, res) {
 
     const hmacHeader = req.headers['x-shopify-hmac-sha256'];
     console.log(req.body)
-    const rawBody = JSON.parse(req.body); // You may need raw body for verification
-
+     // You may need raw body for verification
     // TODO: Verify HMAC (optional but recommended)
     // Use process.env.SHOPIFY_WEBHOOK_SECRET for HMAC comparison
 
-    const order = rawBody;
+    const order = req.body;
 
 
     //Trigger your email logic here
