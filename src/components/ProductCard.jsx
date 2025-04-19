@@ -46,7 +46,7 @@ export default function ProductCard({ product }) {
 
                 <div className="flex justify-between items-center">
           <span className="font-bold text-pink-500 dark:text-pink-400">
-            {product.priceRange.minVariantPrice.amount} {product.priceRange.minVariantPrice.currencyCode}
+            {product.priceRange.minVariantPrice.amount.split(".")[0]},00 {product.priceRange.minVariantPrice.currencyCode}
           </span>
                     <motion.button
                         whileTap={{ scale: 0.9 }}
